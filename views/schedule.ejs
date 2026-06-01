@@ -1,0 +1,59 @@
+<%- include('partials/public-head') %>
+  <header class="public-header">
+    <a class="brand" href="/">
+      <img src="/img/logo.png" alt="Логотип ПК Энергия">
+      <span>
+        <strong>ПК Энергия</strong>
+        <small>СП ЦПСУ</small>
+      </span>
+    </a>
+    <nav class="public-nav" aria-label="Навигация">
+      <a class="public-nav-link" href="/">Заказать справку</a>
+      <a class="public-nav-link" href="/energy-run">Energy Run</a>
+    </nav>
+  </header>
+
+  <main class="schedule-stage">
+    <section class="schedule-hero">
+      <span class="panel-kicker">PDF из архива колледжа</span>
+      <h1>Расписания</h1>
+      <p class="lead">Последние файлы расписания подгружаются с сервера автоматически.</p>
+    </section>
+
+    <% if (selected) { %>
+      <section class="schedule-layout">
+        <aside class="schedule-list" aria-label="Список расписаний">
+          <% schedules.forEach((schedule) => { %>
+            <a class="schedule-item <%= selected.id === schedule.id ? 'active' : '' %>" href="/schedule?file=<%= schedule.id %>">
+              <span><%= schedule.dateLabel %></span>
+              <small><%= schedule.monthLabel %> · <%= schedule.sizeLabel %></small>
+            </a>
+          <% }) %>
+        </aside>
+
+        <section class="schedule-viewer" aria-label="Просмотр расписания">
+          <div class="schedule-viewer-top">
+            <div>
+              <h2><%= selected.dateLabel %></h2>
+              <span><%= selected.filename %></span>
+            </div>
+            <a class="secondary-button compact" href="/schedule/pdf/<%= selected.id %>" target="_blank" rel="noreferrer">Открыть PDF</a>
+          </div>
+          <iframe src="/schedule/pdf/<%= selected.id %>#toolbar=1" title="Расписание на <%= selected.dateLabel %>"></iframe>
+        </section>
+      </section>
+    <% } else { %>
+      <section class="schedule-empty">
+        <img src="/img/logo.png" alt="">
+        <h2>Расписаний пока нет</h2>
+        <% if (archiveExists) { %>
+          <p>В архивной папке не найдено PDF-файлов расписания.</p>
+        <% } else { %>
+          <p>Папка архива недоступна. На сервере проверьте путь <code><%= archiveRoot %></code>.</p>
+        <% } %>
+      </section>
+    <% } %>
+
+    <%- include('partials/social-links', { variant: 'social-links-light' }) %>
+  </main>
+<%- include('partials/public-footer') %>

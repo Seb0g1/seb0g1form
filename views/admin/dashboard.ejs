@@ -1,0 +1,129 @@
+<%- include('../partials/admin-head') %>
+  <div class="admin-shell">
+    <%- include('../partials/admin-sidebar', { user, csrfToken }) %>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div>
+          <span class="panel-kicker">Админ-панель</span>
+          <h1>Заявки на справки</h1>
+        </div>
+        <% if (user.role === 'admin') { %>
+          <a class="secondary-button" href="/admin/export.csv?<%= new URLSearchParams(filters).toString() %>">Экспорт CSV</a>
+        <% } %>
+      </div>
+
+      <% if (flash) { %>
+        <div class="alert <%= flash.type %>" role="status"><%= flash.message %></div>
+      <% } %>
+
+      <section class="stats-grid" aria-label="Статистика заявок">
+        <div class="stat-card">
+          <span>Всего</span>
+          <strong><%= stats.total %></strong>
+        </div>
+        <div class="stat-card status-new">
+          <span>Новые</span>
+          <strong><%= stats.new %></strong>
+        </div>
+        <div class="stat-card status-ready">
+          <span>Готовые</span>
+          <strong><%= stats.ready %></strong>
+        </div>
+        <div class="stat-card status-issued">
+          <span>Выданные</span>
+          <strong><%= stats.issued %></strong>
+        </div>
+        <div class="stat-card status-archived">
+          <span>Архив</span>
+          <strong><%= stats.archived %></strong>
+        </div>
+      </section>
+
+      <form class="filter-bar" action="/admin" method="get">
+        <input name="q" type="search" placeholder="Поиск по Ф.И.О., группе или контакту" value="<%= filters.q %>">
+        <select name="status">
+          <option value="">Все статусы</option>
+          <% filterStatuses.forEach((status) => { %>
+            <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>><%= status %></option>
+          <% }) %>
+        </select>
+        <select name="archive">
+          <option value="active" <%= filters.archive === 'active' ? 'selected' : '' %>>Активные</option>
+          <option value="archived" <%= filters.archive === 'archived' ? 'selected' : '' %>>Архив</option>
+          <option value="all" <%= filters.archive === 'all' ? 'selected' : '' %>>Все заявки</option>
+        </select>
+        <select name="type">
+          <option value="">Все справки</option>
+          <% certificateTypes.forEach((type) => { %>
+            <option value="<%= type %>" <%= filters.type === type ? 'selected' : '' %>><%= type %></option>
+          <% }) %>
+        </select>
+        <select name="sort">
+          <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Сначала новые</option>
+          <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Сначала старые</option>
+          <option value="updated" <%= filters.sort === 'updated' ? 'selected' : '' %>>По обновлению</option>
+        </select>
+        <button class="primary-button compact" type="submit">Показать</button>
+      </form>
+
+      <section class="table-wrap">
+        <% if (rows.length) { %>
+          <table class="requests-table admin-requests-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Студент</th>
+                <th>Справка</th>
+                <th>Контакт</th>
+                <th>Создана</th>
+                <th>Статус</th>
+                <th>Архив</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% rows.forEach((request) => { %>
+                <tr>
+                  <td>#<%= request.id %></td>
+                  <td>
+                    <strong><%= request.full_name %></strong>
+                    <small><%= request.group_name %></small>
+                  </td>
+                  <td><%= request.certificate_type %></td>
+                  <td><%= request.contact || '—' %></td>
+                  <td>
+                    <%= formatDate(request.created_at) %>
+                    <small>Обновлено: <%= formatDate(request.updated_at) %></small>
+                  </td>
+                  <td>
+                    <form class="status-form" action="/admin/requests/<%= request.id %>/status" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <select class="status-select <%= request.status === 'Новая' ? 'is-new' : request.status === 'Готова' ? 'is-ready' : request.status === 'Архив' ? 'is-archived' : 'is-issued' %>" name="status" onchange="window.energyStatusSubmit ? window.energyStatusSubmit(this) : this.form.submit()">
+                        <% if (request.status === 'Архив') { %>
+                          <option value="Архив" selected disabled>Архив</option>
+                        <% } %>
+                        <% statuses.forEach((status) => { %>
+                          <option value="<%= status %>" <%= request.status === status ? 'selected' : '' %>><%= status %></option>
+                        <% }) %>
+                      </select>
+                    </form>
+                  </td>
+                  <td>
+                    <span class="archive-countdown <%= request.archive_after_at ? 'is-counting' : request.archived_at ? 'is-archived' : '' %>" data-countdown="<%= request.archive_after_at || '' %>" data-archived="<%= request.archived_at || '' %>">
+                      <%= request.archive_countdown %>
+                    </span>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <div class="empty-state">
+            <strong>Заявок пока нет</strong>
+            <span>Когда студенты отправят форму, они появятся здесь.</span>
+          </div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+<%- include('../partials/admin-footer') %>

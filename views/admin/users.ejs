@@ -1,0 +1,89 @@
+<%- include('../partials/admin-head') %>
+  <div class="admin-shell">
+    <%- include('../partials/admin-sidebar', { user, csrfToken }) %>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div>
+          <span class="panel-kicker">Доступ</span>
+          <h1>Пользователи админки</h1>
+          <p class="admin-subtitle">Активные секретари: <strong><%= secretaryCount %></strong> из 3. Секретари видят заявки и меняют статус.</p>
+        </div>
+      </div>
+
+      <% if (flash) { %>
+        <div class="alert <%= flash.type %>" role="status"><%= flash.message %></div>
+      <% } %>
+
+      <% if (errors.length) { %>
+        <div class="alert error" role="alert">
+          <% errors.forEach((error) => { %>
+            <div><%= error %></div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <section class="split-layout">
+        <form class="admin-form user-create" action="/admin/users" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <h2>Новый пользователь</h2>
+          <label>
+            <span>Логин</span>
+            <input name="username" type="text" value="<%= old.username || '' %>" placeholder="staff.cpsu" required>
+          </label>
+          <label>
+            <span>Имя</span>
+            <input name="displayName" type="text" value="<%= old.displayName || '' %>" placeholder="Секретарь СП ЦПСУ" required>
+          </label>
+          <label>
+            <span>Роль</span>
+            <select name="role" required>
+              <% roles.forEach((role) => { %>
+                <option value="<%= role %>" <%= (old.role || 'staff') === role ? 'selected' : '' %>><%= roleLabel(role) %></option>
+              <% }) %>
+            </select>
+          </label>
+          <label>
+            <span>Пароль</span>
+            <input name="password" type="password" minlength="8" required>
+          </label>
+          <button class="primary-button full" type="submit">Добавить</button>
+        </form>
+
+        <section class="table-wrap users-wrap">
+          <table class="requests-table">
+            <thead>
+              <tr>
+                <th>Пользователь</th>
+                <th>Роль</th>
+                <th>Создан</th>
+                <th>Доступ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% users.forEach((adminUser) => { %>
+                <tr>
+                  <td>
+                    <strong><%= adminUser.display_name %></strong>
+                    <small>@<%= adminUser.username %></small>
+                  </td>
+                  <td><span class="role-badge"><%= roleLabel(adminUser.role) %></span></td>
+                  <td><%= formatDate(adminUser.created_at) %></td>
+                  <td>
+                    <form action="/admin/users/<%= adminUser.id %>/toggle" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="active" value="<%= adminUser.active ? '0' : '1' %>">
+                      <button class="<%= adminUser.active ? 'danger-button' : 'secondary-button' %> compact" type="submit">
+                        <%= adminUser.active ? 'Отключить' : 'Включить' %>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+  </div>
+<%- include('../partials/admin-footer') %>

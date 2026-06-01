@@ -1,0 +1,23 @@
+{
+  "name": "energy-certificate-requests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Student certificate request portal for GAPOU MO PK Energy, SP CPSU.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --no-warnings src/server.js",
+    "dev": "node --watch --no-warnings src/server.js",
+    "pm2:start": "npx.cmd pm2 start ecosystem.config.cjs",
+    "pm2:restart": "npx.cmd pm2 restart energy-certificate-requests",
+    "pm2:logs": "npx.cmd pm2 logs energy-certificate-requests"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "pm2": "^6.0.14"
+  }
+}

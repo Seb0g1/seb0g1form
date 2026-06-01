@@ -1,0 +1,83 @@
+<%- include('partials/public-head') %>
+  <header class="public-header">
+    <a class="brand" href="/">
+      <img src="/img/logo.png" alt="Логотип ПК Энергия">
+      <span>
+        <strong>ПК Энергия</strong>
+        <small>СП ЦПСУ</small>
+      </span>
+    </a>
+    <nav class="public-nav" aria-label="Навигация">
+      <a class="public-nav-link" href="/schedule">Расписания</a>
+    </nav>
+  </header>
+
+  <main class="student-stage">
+    <section class="request-panel" aria-labelledby="form-title">
+      <div class="panel-kicker">Справки для студентов</div>
+      <h1 id="form-title">Заказать справку</h1>
+      <p class="lead">Заполните форму, а мы передадим заявку сотрудникам колледжа.</p>
+
+      <% if (errors.length) { %>
+        <div class="alert error" role="alert">
+          <% errors.forEach((error) => { %>
+            <div><%= error %></div>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <form class="student-form" action="/requests" method="post" data-loading-form>
+        <label>
+          <span>Ф.И.О.</span>
+          <input name="fullName" type="text" autocomplete="name" placeholder="Иванов Иван Иванович" value="<%= old.fullName || '' %>" required maxlength="180">
+        </label>
+
+        <label>
+          <span>Группа</span>
+          <input name="groupName" type="text" autocomplete="off" placeholder="ИС-23-1" value="<%= old.groupName || '' %>" required maxlength="40">
+        </label>
+
+        <label>
+          <span>Вариант справки</span>
+          <select name="certificateType" required>
+            <option value="">Выберите справку</option>
+            <% certificateTypes.forEach((type) => { %>
+              <option value="<%= type %>" <%= old.certificateType === type ? 'selected' : '' %>><%= type %></option>
+            <% }) %>
+          </select>
+        </label>
+
+        <label>
+          <span>Контакт</span>
+          <input name="contact" type="text" autocomplete="tel" placeholder="Телефон или Telegram" value="<%= old.contact || '' %>" maxlength="120">
+        </label>
+
+        <button class="primary-button submit-button" type="submit">
+          <span class="button-ready">Отправить заявку</span>
+          <span class="button-loading" aria-hidden="true">⚡ Заряжаем заявку</span>
+        </button>
+      </form>
+    </section>
+
+    <aside class="vibe-panel" aria-label="Информация">
+      <div class="logo-orbit">
+        <img src="/img/logo.png" alt="">
+      </div>
+      <a class="energy-run-button" href="/energy-run">Играть в Energy Run</a>
+      <div class="info-line">
+        <span>Кабинет</span>
+        <strong>203</strong>
+      </div>
+      <div class="info-line">
+        <span>Готовность</span>
+        <strong>1-2 недели</strong>
+      </div>
+      <div class="info-line">
+        <span>Статус</span>
+        <strong>Онлайн заявка</strong>
+      </div>
+      <%- include('partials/social-links', { variant: 'social-links-dark' }) %>
+    </aside>
+  </main>
+
+<%- include('partials/public-footer') %>

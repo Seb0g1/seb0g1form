@@ -1,0 +1,30 @@
+<%- include('../partials/admin-head') %>
+  <main class="login-stage">
+    <section class="login-panel">
+      <a class="brand centered" href="/">
+        <img src="/img/logo.png" alt="Логотип ПК Энергия">
+        <span>
+          <strong>ПК Энергия</strong>
+          <small>Админ-панель</small>
+        </span>
+      </a>
+
+      <h1>Вход</h1>
+      <% if (error) { %>
+        <div class="alert error" role="alert"><%= error %></div>
+      <% } %>
+
+      <form class="admin-form" action="/admin/login" method="post">
+        <label>
+          <span>Логин</span>
+          <input name="username" type="text" autocomplete="username" required autofocus>
+        </label>
+        <label>
+          <span>Пароль</span>
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-button full" type="submit">Войти</button>
+      </form>
+    </section>
+  </main>
+<%- include('../partials/admin-footer') %>

@@ -1,0 +1,26 @@
+<aside class="admin-sidebar">
+  <a class="admin-logo" href="/admin">
+    <img src="/img/logo.png" alt="Логотип ПК Энергия">
+    <span>
+      <strong>ПК Энергия</strong>
+      <small>СП ЦПСУ</small>
+    </span>
+  </a>
+
+  <nav class="admin-nav" aria-label="Админ навигация">
+    <a class="<%= currentPath === '/admin' ? 'active' : '' %>" href="/admin">Заявки</a>
+    <% if (user.role === 'admin') { %>
+      <a class="<%= currentPath === '/admin/users' ? 'active' : '' %>" href="/admin/users">Пользователи</a>
+    <% } %>
+    <a href="/" target="_blank" rel="noreferrer">Сайт</a>
+  </nav>
+
+  <div class="admin-profile">
+    <span><%= user.displayName %></span>
+    <small><%= roleLabel(user.role) %></small>
+    <form action="/admin/logout" method="post">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="ghost-button full" type="submit">Выйти</button>
+    </form>
+  </div>
+</aside>

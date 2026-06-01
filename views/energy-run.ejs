@@ -1,0 +1,115 @@
+<%- include('partials/public-head') %>
+  <header class="public-header">
+    <a class="brand" href="/">
+      <img src="/img/logo.png" alt="Логотип ПК Энергия">
+      <span>
+        <strong>ПК Энергия</strong>
+        <small>СП ЦПСУ</small>
+      </span>
+    </a>
+    <nav class="public-nav" aria-label="Навигация">
+      <a class="public-nav-link" href="/">Заказать справку</a>
+      <a class="public-nav-link" href="/schedule">Расписания</a>
+    </nav>
+  </header>
+
+  <main class="energy-run-page">
+    <section class="energy-run-hero">
+      <span class="panel-kicker">Игра для студентов</span>
+      <h1>Energy Run</h1>
+      <p class="lead">Создайте профиль, бегите дальше всех и поднимайте свою группу в лидерборде.</p>
+    </section>
+
+    <section class="energy-run-layout">
+      <div class="energy-run-main-card">
+        <% if (!player) { %>
+          <form class="student-form energy-profile-form" action="/energy-run/register" method="post">
+            <h2>Профиль игрока</h2>
+            <% if (errors.length) { %>
+              <div class="alert error" role="alert">
+                <% errors.forEach((error) => { %>
+                  <div><%= error %></div>
+                <% }) %>
+              </div>
+            <% } %>
+            <label>
+              <span>Имя</span>
+              <input name="firstName" type="text" placeholder="Данил" value="<%= old.firstName || '' %>" required maxlength="40">
+            </label>
+            <label>
+              <span>Фамилия</span>
+              <input name="lastName" type="text" placeholder="Петренко" value="<%= old.lastName || '' %>" required maxlength="60">
+            </label>
+            <label>
+              <span>Группа</span>
+              <input name="groupName" type="text" placeholder="ИС-23-1" value="<%= old.groupName || '' %>" required maxlength="40">
+            </label>
+            <button class="primary-button full" type="submit">Сохранить профиль</button>
+          </form>
+        <% } else { %>
+          <div class="energy-player-bar">
+            <div>
+              <span class="panel-kicker">Игрок</span>
+              <h2><%= player.first_name %> <%= player.last_name %></h2>
+              <p><%= player.group_name %> · лучший счет <strong><%= playerStats.best_score %></strong></p>
+            </div>
+            <form action="/energy-run/logout" method="post">
+              <button class="secondary-button compact" type="submit">Сменить профиль</button>
+            </form>
+          </div>
+
+          <section class="energy-game-shell energy-game-page-shell" data-energy-run data-energy-run-embedded data-energy-player="1">
+            <div class="energy-game-hud">
+              <span>Score <strong data-energy-score>0</strong></span>
+              <span data-energy-state>Ready</span>
+            </div>
+            <canvas class="energy-game-canvas" width="900" height="320" data-energy-canvas></canvas>
+            <div class="energy-game-actions">
+              <button class="secondary-button" type="button" data-energy-run-start>Старт</button>
+              <button class="primary-button" type="button" data-energy-jump>Прыжок</button>
+            </div>
+            <div class="energy-save-state" data-energy-save-state></div>
+          </section>
+        <% } %>
+      </div>
+
+      <aside class="energy-leaderboard-card">
+        <div class="leaderboard-section">
+          <h2>Лидерборд</h2>
+          <% if (leaderboard.length) { %>
+            <ol class="leaderboard-list">
+              <% leaderboard.forEach((row) => { %>
+                <li>
+                  <span><%= row.first_name %> <%= row.last_name %></span>
+                  <small><%= row.group_name %> · игр: <%= row.games_count %></small>
+                  <strong><%= row.best_score %></strong>
+                </li>
+              <% }) %>
+            </ol>
+          <% } else { %>
+            <p class="leaderboard-empty">Пока нет результатов. Первый забег будет легендарным.</p>
+          <% } %>
+        </div>
+
+        <div class="leaderboard-section">
+          <h2>Лучшие группы</h2>
+          <% if (groupLeaderboard.length) { %>
+            <ol class="leaderboard-list group-board">
+              <% groupLeaderboard.forEach((row) => { %>
+                <li>
+                  <span><%= row.group_name %></span>
+                  <small>игроков: <%= row.players_count %> · игр: <%= row.games_count %></small>
+                  <strong><%= row.total_score %></strong>
+                </li>
+              <% }) %>
+            </ol>
+          <% } else { %>
+            <p class="leaderboard-empty">Группы появятся после первых сохраненных очков.</p>
+          <% } %>
+        </div>
+      </aside>
+    </section>
+
+    <%- include('partials/social-links', { variant: 'social-links-light' }) %>
+  </main>
+<%- include('partials/public-footer') %>
