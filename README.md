@@ -14,9 +14,18 @@ npm.cmd start
 
 ## PM2
 
+Windows:
+
 ```powershell
 npm.cmd run pm2:start
 npm.cmd run pm2:logs
+```
+
+Linux server:
+
+```bash
+npm run pm2:start
+npm run pm2:logs
 ```
 
 ## Админка

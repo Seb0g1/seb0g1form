@@ -7,9 +7,9 @@
   "scripts": {
     "start": "node --no-warnings src/server.js",
     "dev": "node --watch --no-warnings src/server.js",
-    "pm2:start": "npx.cmd pm2 start ecosystem.config.cjs",
-    "pm2:restart": "npx.cmd pm2 restart energy-certificate-requests",
-    "pm2:logs": "npx.cmd pm2 logs energy-certificate-requests"
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:restart": "pm2 restart energy-certificate-requests",
+    "pm2:logs": "pm2 logs energy-certificate-requests"
   },
   "engines": {
     "node": ">=24.0.0"
