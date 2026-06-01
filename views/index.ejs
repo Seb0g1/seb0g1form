@@ -26,6 +26,7 @@
         </div>
       <% } %>
 
+      <% const showScholarshipPeriod = old.certificateType === 'О размере стипендии'; %>
       <form class="student-form" action="/requests" method="post" data-loading-form>
         <label>
           <span>Ф.И.О.</span>
@@ -39,13 +40,36 @@
 
         <label>
           <span>Вариант справки</span>
-          <select name="certificateType" required>
+          <select name="certificateType" required data-certificate-select data-scholarship-value="О размере стипендии">
             <option value="">Выберите справку</option>
             <% certificateTypes.forEach((type) => { %>
               <option value="<%= type %>" <%= old.certificateType === type ? 'selected' : '' %>><%= type %></option>
             <% }) %>
           </select>
         </label>
+
+        <div class="period-card" data-scholarship-period <%= showScholarshipPeriod ? '' : 'hidden' %>>
+          <div class="period-card-head">
+            <div>
+              <span>Период справки</span>
+              <strong>О размере стипендии</strong>
+            </div>
+            <div class="period-presets" aria-label="Быстрый выбор периода">
+              <button type="button" data-period-preset="12">Год</button>
+              <button type="button" data-period-preset="6">Полгода</button>
+            </div>
+          </div>
+          <div class="period-fields">
+            <label class="date-field">
+              <span>С</span>
+              <input name="periodStart" type="date" value="<%= old.periodStart || '' %>" <%= showScholarshipPeriod ? 'required' : '' %> data-period-start>
+            </label>
+            <label class="date-field">
+              <span>По</span>
+              <input name="periodEnd" type="date" value="<%= old.periodEnd || '' %>" <%= showScholarshipPeriod ? 'required' : '' %> data-period-end>
+            </label>
+          </div>
+        </div>
 
         <label>
           <span>Контакт</span>

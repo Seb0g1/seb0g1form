@@ -10,6 +10,46 @@ loadingForms.forEach((form) => {
   });
 });
 
+document.querySelectorAll("[data-certificate-select]").forEach((select) => {
+  const form = select.closest("form");
+  const periodCard = form?.querySelector("[data-scholarship-period]");
+  const startInput = form?.querySelector("[data-period-start]");
+  const endInput = form?.querySelector("[data-period-end]");
+  const scholarshipValue = select.dataset.scholarshipValue || "";
+
+  if (!periodCard || !startInput || !endInput) return;
+
+  const syncPeriodState = () => {
+    const isScholarship = select.value === scholarshipValue;
+    periodCard.hidden = !isScholarship;
+    periodCard.classList.toggle("is-visible", isScholarship);
+    startInput.required = isScholarship;
+    endInput.required = isScholarship;
+
+    if (!isScholarship) {
+      startInput.value = "";
+      endInput.value = "";
+    }
+  };
+
+  select.addEventListener("change", syncPeriodState);
+  periodCard.querySelectorAll("[data-period-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const months = Number(button.dataset.periodPreset);
+      if (!Number.isFinite(months) || months <= 0) return;
+
+      const today = new Date();
+      const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const start = new Date(end.getFullYear(), end.getMonth() - months, end.getDate());
+      startInput.value = formatDateInput(start);
+      endInput.value = formatDateInput(end);
+      startInput.focus();
+    });
+  });
+
+  syncPeriodState();
+});
+
 window.energyStatusSubmit = (select) => {
   if (!select?.form) return;
 
@@ -39,6 +79,13 @@ function showReadyRun() {
   `;
   document.body.append(overlay);
   window.setTimeout(() => overlay.remove(), 1_400);
+}
+
+function formatDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function updateCountdown(element) {

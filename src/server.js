@@ -25,6 +25,7 @@ const STATUSES = ["Новая", "Готова", "Выдана"];
 const ARCHIVE_STATUS = "Архив";
 const FILTER_STATUSES = [...STATUSES, ARCHIVE_STATUS];
 const CERTIFICATE_TYPES = ["Об обучении", "В военкомат", "О размере стипендии"];
+const SCHOLARSHIP_CERTIFICATE_TYPE = "О размере стипендии";
 const ROLES = ["admin", "staff"];
 const quickSubmitWindowMs = 30_000;
 const readyArchiveDelayMs = 7 * 24 * 60 * 60 * 1000;
@@ -45,6 +46,8 @@ db.exec(`
     full_name TEXT NOT NULL,
     group_name TEXT NOT NULL,
     certificate_type TEXT NOT NULL,
+    period_start TEXT,
+    period_end TEXT,
     contact TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'Новая',
     ready_at TEXT,
@@ -138,6 +141,8 @@ app.post("/requests", (req, res) => {
     fullName: normalizeText(req.body.fullName),
     groupName: normalizeText(req.body.groupName),
     certificateType: normalizeText(req.body.certificateType),
+    periodStart: normalizeDateInput(req.body.periodStart),
+    periodEnd: normalizeDateInput(req.body.periodEnd),
     contact: normalizeText(req.body.contact)
   };
   const errors = validateRequest(payload);
@@ -156,11 +161,13 @@ app.post("/requests", (req, res) => {
   }
 
   rememberSubmit(req);
+  const periodStart = payload.certificateType === SCHOLARSHIP_CERTIFICATE_TYPE ? payload.periodStart : null;
+  const periodEnd = payload.certificateType === SCHOLARSHIP_CERTIFICATE_TYPE ? payload.periodEnd : null;
   const now = new Date().toISOString();
   db.prepare(`
-    INSERT INTO requests (full_name, group_name, certificate_type, contact, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, 'Новая', ?, ?)
-  `).run(payload.fullName, payload.groupName, payload.certificateType, payload.contact, now, now);
+    INSERT INTO requests (full_name, group_name, certificate_type, period_start, period_end, contact, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'Новая', ?, ?)
+  `).run(payload.fullName, payload.groupName, payload.certificateType, periodStart, periodEnd, payload.contact, now, now);
 
   res.redirect("/success");
 });
@@ -368,7 +375,7 @@ app.get("/admin/export.csv", requireAuth, requireAdmin, (req, res) => {
   autoArchiveReadyRequests();
   const filters = buildRequestFilters(req.query);
   const rows = listRequests({ ...filters, limit: 10_000 });
-  const header = ["ID", "ФИО", "Группа", "Тип справки", "Контакт", "Статус", "Архив", "Создана", "Обновлена"];
+  const header = ["ID", "ФИО", "Группа", "Тип справки", "Период", "Контакт", "Статус", "Архив", "Создана", "Обновлена"];
   const csv = [
     header.map(csvCell).join(";"),
     ...rows.map((row) => [
@@ -376,6 +383,7 @@ app.get("/admin/export.csv", requireAuth, requireAdmin, (req, res) => {
       row.full_name,
       row.group_name,
       row.certificate_type,
+      formatRequestPeriod(row),
       row.contact,
       row.status,
       row.archive_countdown,
@@ -537,7 +545,9 @@ function migrateRequestsTable() {
   const missingColumns = [
     ["ready_at", "TEXT"],
     ["archive_after_at", "TEXT"],
-    ["archived_at", "TEXT"]
+    ["archived_at", "TEXT"],
+    ["period_start", "TEXT"],
+    ["period_end", "TEXT"]
   ].filter(([name]) => !columns.includes(name));
 
   for (const [name, type] of missingColumns) {
@@ -729,7 +739,8 @@ function autoArchiveReadyRequests() {
 function decorateRequest(row) {
   return {
     ...row,
-    archive_countdown: formatArchiveCountdown(row)
+    archive_countdown: formatArchiveCountdown(row),
+    period_label: formatRequestPeriod(row)
   };
 }
 
@@ -757,6 +768,30 @@ function formatArchiveCountdown(row) {
   return `В архив через ${hours} ч.`;
 }
 
+function formatRequestPeriod(row) {
+  if (!row?.period_start && !row?.period_end) return "";
+  if (row.period_start && row.period_end) {
+    return `с ${formatPlainDate(row.period_start)} по ${formatPlainDate(row.period_end)}`;
+  }
+  if (row.period_start) return `с ${formatPlainDate(row.period_start)}`;
+  return `по ${formatPlainDate(row.period_end)}`;
+}
+
+function formatPlainDate(value) {
+  if (!isValidDateInput(value)) return String(value || "");
+  const [year, month, day] = value.split("-");
+  return `${day}.${month}.${year}`;
+}
+
+function isValidDateInput(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ""))) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
+}
+
 function validateRequest(payload) {
   const errors = [];
   if (payload.fullName.length < 5 || payload.fullName.length > 180) {
@@ -767,6 +802,13 @@ function validateRequest(payload) {
   }
   if (!CERTIFICATE_TYPES.includes(payload.certificateType)) {
     errors.push("Выберите вариант справки.");
+  }
+  if (payload.certificateType === SCHOLARSHIP_CERTIFICATE_TYPE) {
+    if (!isValidDateInput(payload.periodStart) || !isValidDateInput(payload.periodEnd)) {
+      errors.push("Для справки о стипендии выберите период: дату с и дату по.");
+    } else if (payload.periodStart > payload.periodEnd) {
+      errors.push("Дата начала периода не может быть позже даты окончания.");
+    }
   }
   if (payload.contact.length > 120) {
     errors.push("Контакт слишком длинный.");
@@ -980,6 +1022,10 @@ function formatFileSize(bytes) {
 
 function normalizeText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function normalizeDateInput(value) {
+  return String(value || "").trim().slice(0, 10);
 }
 
 function normalizeName(value) {

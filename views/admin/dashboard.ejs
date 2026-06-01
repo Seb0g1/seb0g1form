@@ -89,7 +89,12 @@
                     <strong><%= request.full_name %></strong>
                     <small><%= request.group_name %></small>
                   </td>
-                  <td><%= request.certificate_type %></td>
+                  <td>
+                    <%= request.certificate_type %>
+                    <% if (request.period_label) { %>
+                      <small class="request-period">Период: <%= request.period_label %></small>
+                    <% } %>
+                  </td>
                   <td><%= request.contact || '—' %></td>
                   <td>
                     <%= formatDate(request.created_at) %>
